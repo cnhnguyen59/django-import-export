@@ -1,3 +1,5 @@
+from cProfile import label
+from dataclasses import fields
 import os.path
 import warnings
 
@@ -84,6 +86,12 @@ class ExportForm(ImportExportFormBase):
         choices=(),
     )
 
+    export_columns = forms.ChoiceField(
+        label=_("Export Columms"),
+        choices=(('test1', 'test1'), ('test2','test2'))
+    )
+
+
     def __init__(self, formats, *args, **kwargs):
         resources = kwargs.pop("resources", None)
         super().__init__(*args, resources=resources, **kwargs)
@@ -115,6 +123,7 @@ def export_action_form_factory(formats):
         file_format = forms.ChoiceField(
             label=_("Format"), choices=formats, required=False
         )
+
 
     _ExportActionForm.__name__ = str("ExportActionForm")
 
