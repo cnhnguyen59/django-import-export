@@ -1,5 +1,6 @@
 import logging
 import warnings
+import tablib
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -171,7 +172,21 @@ class BaseExportMixin(BaseImportExportMixin):
         )
         cls = export_class(**export_resource_kwargs)
         export_data = cls.export(*args, queryset=queryset, **kwargs)
-        return export_data
+
+        # columns = request.POST.getlist("export_columns")
+        export_columns = ['All','name', 'price']
+
+        if 'All' in export_columns:
+            return export_data
+
+        # Find the indices of the desired columns
+        column_indices = [export_data.headers.index(col) for col in export_columns]
+
+        # Extract the desired columns from the dataset
+        filtered_data = [tuple(row[i] for i in column_indices) for row in export_data]
+        filtered_dataset = tablib.Dataset(*filtered_data, headers=export_columns)
+        
+        return filtered_dataset
 
     def get_export_filename(self, file_format):
         date_str = now().strftime("%Y-%m-%d")

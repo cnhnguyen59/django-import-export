@@ -44,6 +44,7 @@ class ImportForm(ImportExportFormBase):
         label=_("Format"),
         choices=(),
     )
+    
 
     def __init__(self, import_formats, *args, **kwargs):
         resources = kwargs.pop("resources", None)
@@ -86,15 +87,16 @@ class ExportForm(ImportExportFormBase):
         choices=(),
     )
 
-    export_columns = forms.ChoiceField(
+
+    export_columns = forms.MultipleChoiceField(
         label=_("Export Columms"),
-        choices=(('test1', 'test1'), ('test2','test2'))
+        choices=()
     )
 
 
     def __init__(self, formats, *args, **kwargs):
         resources = kwargs.pop("resources", None)
-        super().__init__(*args, resources=resources, **kwargs)
+        super(ExportForm, self).__init__(*args, resources=resources, **kwargs)
         choices = []
         for i, f in enumerate(formats):
             choices.append(
@@ -107,6 +109,10 @@ class ExportForm(ImportExportFormBase):
             choices.insert(0, ("", "---"))
 
         self.fields["file_format"].choices = choices
+
+
+
+        self.fields["export_columns"].choices = (('test1', 'test1'), ('test2','test2'))
 
 
 def export_action_form_factory(formats):
