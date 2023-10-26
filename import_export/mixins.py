@@ -1,6 +1,6 @@
 import logging
 import warnings
-import tablib
+# import tablib
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -64,7 +64,10 @@ class BaseImportExportMixin:
         return [self.resource_class]
 
     def get_resource_kwargs(self, request, *args, **kwargs):
-        return {}
+        form_fields = request.POST.getlist("export_columns")
+        if 'All' in form_fields:
+            return {}
+        return {"form_fields": form_fields}
 
     def get_resource_index(self, form):
         resource_index = 0
@@ -171,19 +174,20 @@ class BaseExportMixin(BaseImportExportMixin):
             request, *args, **kwargs
         )
         cls = export_class(**export_resource_kwargs)
-        export_data = cls.export(*args, queryset=queryset, **kwargs)
+        form_fields = [field for field in export_resource_kwargs.values()]
+        export_data = cls.export(*args, queryset=queryset, form_fields=form_fields, **kwargs)
 
-        export_columns = request.POST.getlist("export_columns")
+        # export_columns = request.POST.getlist("export_columns")
 
-        if 'All' in export_columns:
-            return export_data
+        # if 'All' in export_columns:
+        return export_data
 
-        column_indices = [export_data.headers.index(col) for col in export_columns]
+        # column_indices = [export_data.headers.index(col) for col in export_columns]
 
-        filtered_data = [tuple(row[i] for i in column_indices) for row in export_data]
-        filtered_dataset = tablib.Dataset(*filtered_data, headers=export_columns)
+        # filtered_data = [tuple(row[i] for i in column_indices) for row in export_data]
+        # filtered_dataset = tablib.Dataset(*filtered_data, headers=export_columns)
         
-        return filtered_dataset
+        # return filtered_dataset
 
     def get_export_filename(self, file_format):
         date_str = now().strftime("%Y-%m-%d")

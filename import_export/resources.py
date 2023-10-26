@@ -354,12 +354,20 @@ class Resource(metaclass=DeclarativeMetaclass):
         else:
             return self._meta.chunk_size
 
-    def get_fields(self, **kwargs):
+    def get_fields(self, **kwargs): 
         """
         Returns fields sorted according to
         :attr:`~import_export.resources.ResourceOptions.export_order`.
         """
-        return [self.fields[f] for f in self.get_export_order()]
+        # print('test')
+        # print(kwargs)
+        form_fields = kwargs.get('form_fields')
+        # form_fields = ['id', 'name', 'price']
+        # print(form_fields)
+        if form_fields == None:
+            return [self.fields[f] for f in self.get_export_order()]
+
+        return [self.fields[f] for f in self.get_export_order() if force_str(self.fields[f].column_name) in form_fields]
 
     def get_field_name(self, field):
         """
@@ -578,6 +586,7 @@ class Resource(metaclass=DeclarativeMetaclass):
 
     def get_import_fields(self):
         return self.get_fields()
+        
 
     def import_obj(self, obj, data, dry_run, **kwargs):
         """
@@ -1065,15 +1074,36 @@ class Resource(metaclass=DeclarativeMetaclass):
             return method(obj)
         return field.export(obj)
 
-    def get_export_fields(self):
-        return self.get_fields()
+    def get_export_fields(self, **kwargs):
+        if kwargs.get('form_fields'):
+            form_fields = kwargs.get('form_fields')
+        # form_fields = ['id', 'name', 'price']
+            return self.get_fields(form_fields = form_fields) 
+        
+        return self.get_fields() 
 
-    def export_resource(self, obj):
+    def export_resource(self, obj, **kwargs):
+        # print('test1')
+        # print(self.get_export_fields())
+        # form_fields = ['id', 'name', 'price']
+        if kwargs.get('form_fields'):
+            form_fields = kwargs.get("form_fields")
+            return [self.export_field(field, obj) for field in self.get_export_fields(form_fields = form_fields)]
+        
         return [self.export_field(field, obj) for field in self.get_export_fields()]
 
-    def get_export_headers(self):
+    def get_export_headers(self, **kwargs):#, form_fields
+        # print('test2')
+        # print(self.get_export_fields())
+        # form_fields = ['id', 'name', 'price']
+        if kwargs.get('form_fields'):
+            form_fields = kwargs.get('form_fields')
+            return form_fields
         headers = [force_str(field.column_name) for field in self.get_export_fields()]
+        # # print(headers)
+
         return headers
+    
 
     def get_user_visible_headers(self):
         headers = [
@@ -1101,11 +1131,12 @@ class Resource(metaclass=DeclarativeMetaclass):
         else:
             yield from queryset.iterator(chunk_size=self.get_chunk_size())
 
-    def export(self, *args, queryset=None, **kwargs):
+    def export(self, *args, queryset=None, form_fields=None, **kwargs):
         """
         Exports a resource.
         :returns: Dataset object.
         """
+        form_fields = form_fields[0]
         if len(args) == 1 and (
             isinstance(args[0], QuerySet) or isinstance(args[0], list)
         ):
@@ -1126,11 +1157,11 @@ class Resource(metaclass=DeclarativeMetaclass):
         if queryset is None:
             queryset = self.get_queryset()
         queryset = self.filter_export(queryset, *args, **kwargs)
-        headers = self.get_export_headers()
+        headers = self.get_export_headers(form_fields=form_fields)
         data = tablib.Dataset(headers=headers)
 
         for obj in self.iter_queryset(queryset):
-            data.append(self.export_resource(obj))
+            data.append(self.export_resource(obj, form_fields=form_fields))
 
         self.after_export(queryset, data, *args, **kwargs)
 

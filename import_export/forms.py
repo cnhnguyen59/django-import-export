@@ -44,7 +44,6 @@ class ImportForm(ImportExportFormBase):
         label=_("Format"),
         choices=(),
     )
-    
 
     def __init__(self, import_formats, *args, **kwargs):
         resources = kwargs.pop("resources", None)
@@ -86,7 +85,6 @@ class ExportForm(ImportExportFormBase):
         label=_("Format"),
         choices=(),
     )
-
 
     export_columns = forms.MultipleChoiceField(
         label=_("Export Columms"),
