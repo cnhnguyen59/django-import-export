@@ -359,11 +359,7 @@ class Resource(metaclass=DeclarativeMetaclass):
         Returns fields sorted according to
         :attr:`~import_export.resources.ResourceOptions.export_order`.
         """
-        # print('test')
-        # print(kwargs)
         form_fields = kwargs.get('form_fields')
-        # form_fields = ['id', 'name', 'price']
-        # print(form_fields)
         if form_fields == None:
             return [self.fields[f] for f in self.get_export_order()]
 
@@ -1077,30 +1073,23 @@ class Resource(metaclass=DeclarativeMetaclass):
     def get_export_fields(self, **kwargs):
         if kwargs.get('form_fields'):
             form_fields = kwargs.get('form_fields')
-        # form_fields = ['id', 'name', 'price']
             return self.get_fields(form_fields = form_fields) 
         
         return self.get_fields() 
 
     def export_resource(self, obj, **kwargs):
-        # print('test1')
-        # print(self.get_export_fields())
-        # form_fields = ['id', 'name', 'price']
         if kwargs.get('form_fields'):
             form_fields = kwargs.get("form_fields")
             return [self.export_field(field, obj) for field in self.get_export_fields(form_fields = form_fields)]
         
         return [self.export_field(field, obj) for field in self.get_export_fields()]
 
-    def get_export_headers(self, **kwargs):#, form_fields
-        # print('test2')
-        # print(self.get_export_fields())
-        # form_fields = ['id', 'name', 'price']
+    def get_export_headers(self, **kwargs):
         if kwargs.get('form_fields'):
             form_fields = kwargs.get('form_fields')
             return form_fields
         headers = [force_str(field.column_name) for field in self.get_export_fields()]
-        # # print(headers)
+
 
         return headers
     
@@ -1136,7 +1125,6 @@ class Resource(metaclass=DeclarativeMetaclass):
         Exports a resource.
         :returns: Dataset object.
         """
-        form_fields = form_fields[0]
         if len(args) == 1 and (
             isinstance(args[0], QuerySet) or isinstance(args[0], list)
         ):
@@ -1154,6 +1142,8 @@ class Resource(metaclass=DeclarativeMetaclass):
 
         self.before_export(queryset, *args, **kwargs)
 
+        if form_fields:
+            form_fields = form_fields[0]
         if queryset is None:
             queryset = self.get_queryset()
         queryset = self.filter_export(queryset, *args, **kwargs)
