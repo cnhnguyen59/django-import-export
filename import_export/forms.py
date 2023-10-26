@@ -110,9 +110,13 @@ class ExportForm(ImportExportFormBase):
 
         self.fields["file_format"].choices = choices
 
+        export_column = [('All', 'All')]
+        for field in resources[0].fields:
+            choice = (field, field)
+            export_column.append(choice)
 
 
-        self.fields["export_columns"].choices = (('test1', 'test1'), ('test2','test2'))
+        self.fields["export_columns"].choices = export_column
 
 
 def export_action_form_factory(formats):
